@@ -8,18 +8,20 @@
 
 class Encoder {
   private :
-    uint8_t pinClk, pinDT;
-    int PPR;
+    uint8_t pinClk, pinDT; // pin encoder
+    int PPR; // pulse per revolution 
+    int wheelRad; // wheel radius in m
     int pulseCounter;
     int prevPulse;
     float sampleTime;
-    float RPMValue;
+    float velocity;
 
   public :
-    Encoder(uint8_t pinClk, uint8_t pinDT, int PPR);
-
+    Encoder(uint8_t pinClk, uint8_t pinDT, int PPR, int wheelRad);
+  
     void updatePulse();
-    float getRPM();
+    float getDistance(float combVelocity);
+    float getVelocity();
 };
 
 #endif

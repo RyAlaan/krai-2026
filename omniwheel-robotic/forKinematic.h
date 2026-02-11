@@ -4,24 +4,21 @@
 #include <math.h>
 
 class ForKinematic {
-  private :
-    float alpha, v_vw1, v_vw2, v_vw3, v_vw4;
-    float alpha1, alpha2, alpha3, alpha4;
-    const int PWM = 255;
-    const float omega_max = 62.83; // 2 × π × putaran = 2 × π × 10 
-    const float rad = 0.03;
+  // private :
+  //   float alpha, v_vw1, v_vw2, v_vw3, v_vw4;
+  //   float angMotor1, angMotor2, angMotor3, angMotor4;
 
   public :
     ForKinematic();
 
     // encoder velocity
-    float encVelocityX(float alpha1, float alpha2, float v_vw1, float v_vw2) {
+    float encVelocityX(float angMotor1, float angMotor2, float v_vw1, float v_vw2, float radEnc) {
       float x1 = -sin(alpha) * v_vw1;
       float x2 = -sin(alpha) * v_vw2;
-      return (x1 + x2);
+      return (x1 + x2); 
     }
 
-    float encVelocityY(float alpha1, float alpha2, float v_vw1, float v_vw2) {
+    float encVelocityY(float angMotor1, float angMotor2, float v_vw1, float v_vw2) {
       float y1 = cos(alpha) * v_vw1;
       float y2 = cos(alpha) * v_vw2;
       return (y1 + y2);
@@ -32,24 +29,18 @@ class ForKinematic {
     }
 
     // motor velocity
-    float velocityX(float alpha1, float alpha2, float alpha3, float alpha4, float v_vw1, float v_vw2, float v_vw3, float v_vw4) {
-      float x1 = -sin(alpha1) * v_vw1;
-      float x2 = -sin(alpha2) * v_vw2;
-      float x3 = -sin(alpha3) * v_vw3;
-      float x4 = -sin(alpha4) * v_vw4;
-      return (this->rad / 4) * (x1 + x2 + x3 + x4);
+    float velocityX(float angMotor1, float angMotor2, float angMotor3, float angMotor4, float v_vw1, float v_vw2, float v_vw3, float v_vw4, float encVx, float radiusMotor,) {
+      float motorVx = (radiusMotor / 4) * (-sin(angMotor1) * v_vw1 - sin(angMotor2) * v_vw2 - sin(angMotor3) * v_vw3 - sin(angMotor4) * v_vw4);
+      return alpha * motorVx + (1 - alpha) *  ;
     }
 
-    float velocityY(float alpha1, float alpha2, float alpha3, float alpha4, float v_vw1, float v_vw2, float v_vw3, float v_vw4) {
-      float y1 = cos(alpha1) * v_vw1;
-      float y2 = cos(alpha2) * v_vw2;
-      float y3 = cos(alpha3) * v_vw3;
-      float y4 = cos(alpha4) * v_vw4;
-      return (this->rad / 4) * (y1 + y2 + y3 + y4);
+    float velocityY(float angMotor1, float angMotor2, float angMotor3, float angMotor4, float v_vw1, float v_vw2, float v_vw3, float v_vw4, float encVy, float radiusMotor) {
+      float motorVy = (radiusMotor / 4) * (-sin(angMotor1) * v_vw1 - sin(angMotor2) * v_vw2 - sin(angMotor3) * v_vw3 - sin(angMotor4) * v_vw4);
+      return alpha * motorVy + (1 - alpha) * encVy;
     }
 
-    float omega(int v_vw1, int v_vw2, int v_vw3, int v_vw4) {
-      return v_vw1 + v_vw2 + v_vw3 + v_vw4;
+    float getOmega(float v_vw1, float v_vw2, float v_vw3, float v_vw4, float radiusMotor, float distanceMotor) {
+      return (radiusMotor / (4 * distanceMotor)) * (v_vw1 + v_vw2 + v_vw3 + v_vw4);
     }
 };
 
