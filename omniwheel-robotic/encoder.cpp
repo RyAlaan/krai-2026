@@ -19,12 +19,12 @@ Encoder::Encoder(uint8_t pinClk, uint8_t pinDT, int PPR, int wheelRad) {
   pinMode(pinDT, INPUT_PULLUP);
 
   encoderPtr = this;
-  attachInterrupt(digitalPinToInterrupt(pinClk), updatePulse, RISING); // akan memanggil method counter setiap kali pinClk mengalami clock RISING 
+  attachInterrupt(digitalPinToInterrupt(pinClk), updatePulse, RISING);  // akan memanggil method counter setiap kali pinClk mengalami clock RISING
 }
 
 // dilankan setiap kali valClk RISING
 void Encoder::updatePulse() {
-  bool valDT= digitalRead(pinDT);
+  bool valDT = digitalRead(pinDT);
 
   valDT ? pulseCounter++ : pulseCounter--;
 }
