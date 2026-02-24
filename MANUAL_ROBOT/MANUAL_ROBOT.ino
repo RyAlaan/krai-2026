@@ -6,12 +6,13 @@ Motor roda3(sel_bl, pwm_bl);
 Motor roda4(sel_br, pwm_br);
 
 
-float manual_linear_rpm  = 150.0;   // translasi
-float manual_angular_rpm = 100.0;   // rotasi
+float manual_linear_rpm  = 4000.0;   // translasi
+float manual_angular_rpm = 500.0;   // rotasi
 
 void setup() {
   Serial.begin(115200);
   Motor::beginPWM(20000, 12);
+  pinMode(PC13, OUTPUT);
 
   rangkabawah = LowerPart(sel_fr, pwm_fr,
                           sel_fl, pwm_fl,
@@ -41,24 +42,31 @@ void loop() {
   if (Serial.available()) {
     char key = Serial.read();
 
+
+    if (key == 'o') {
+      digitalWrite(PC13, LOW);
+    }
+    if (key == 'n') {
+      digitalWrite(PC13, HIGH);
+    }
     if (key == 'w') {
-      Vx = manual_linear_rpm;
-      Vy = 0;
+      Vy = manual_linear_rpm;
+      Vx = 0;
       Wr = 0;
     }
     else if (key == 's') {
-      Vx = -manual_linear_rpm;
-      Vy = 0;
-      Wr = 0;
-    }
-    else if (key == 'a') {
+      Vy = -manual_linear_rpm;
       Vx = 0;
-      Vy = manual_linear_rpm;
       Wr = 0;
     }
     else if (key == 'd') {
-      Vx = 0;
-      Vy = -manual_linear_rpm;
+      Vy = 0;
+      Vx = manual_linear_rpm;
+      Wr = 0;
+    }
+    else if (key == 'a') {
+      Vy = 0;
+      Vx = -manual_linear_rpm;
       Wr = 0;
     }
     else if (key == 'q') {
@@ -80,6 +88,14 @@ void loop() {
 
   /* ===================== INVERSE KINEMATICS ===================== */
   calc.inverse_kinematics(Vx, Vy, Wr);
+
+  // rangkabawah.Movement(
+  //   calc.Vwheel[0],
+  //   calc.Vwheel[1],
+  //   calc.Vwheel[2],
+  //   calc.Vwheel[3]
+  // );
+
   
   /* ===================== BACA ENCODER ===================== */
   static long prev_fr = 0, prev_fl = 0, prev_bl = 0, prev_br = 0;
@@ -111,7 +127,7 @@ void loop() {
     prev_br = br;
     prevTime = now;
 
-    /* ===================== PID ===================== */
+  //   /* ===================== PID ===================== */
     Setpoint1 = calc.Vwheel[0];
     Setpoint2 = calc.Vwheel[1];
     Setpoint3 = calc.Vwheel[2];
@@ -131,12 +147,16 @@ void loop() {
   }
 
   /* ===================== DEBUG ===================== */
-  Serial.print("Vx: "); Serial.print(Vx);
-  Serial.print("  Vy: "); Serial.print(Vy);
+  Serial.print("Vy: "); Serial.print(Vy);
+  Serial.print("  Vxx: "); Serial.print(Vx);
   Serial.print("  Wr: "); Serial.print(Wr);
-  Serial.print("  | RPM1: "); Serial.print(Vreal1);
-  Serial.print("  RPM2: "); Serial.print(Vreal2);
-  Serial.print("  RPM3: "); Serial.print(Vreal3);
-  Serial.print("  RPM4: "); Serial.println(Vreal4);
+  // Serial.print("  | RPM1: "); Serial.print(Vreal1);
+  // Serial.print("  RPM2: "); Serial.print(Vreal2);
+  // Serial.print("  RPM3: "); Serial.print(Vreal3);
+  // Serial.print("  RPM4: "); Serial.println(Vreal4);
+  Serial.print("  | VWheel1: "); Serial.print(calc.Vwheel[1]);
+  Serial.print("  VWheel2: "); Serial.print(calc.Vwheel[2]);
+  Serial.print("  VWheel3: "); Serial.print(calc.Vwheel[3]);
+  Serial.print("  VWheel4: "); Serial.println(calc.Vwheel[4]);
 
 }
