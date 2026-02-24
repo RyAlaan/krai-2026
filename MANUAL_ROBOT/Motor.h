@@ -15,7 +15,7 @@ class Motor {
 
     void CW(uint16_t value);
     void CCW(uint16_t value);
-    void stop();
+    void STOP();
 
 };
 

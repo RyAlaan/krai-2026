@@ -25,15 +25,8 @@ uint8_t inputrate = 7; /*4 ms for 1,25 m/s
 
 /* --- OBJECT --- */
 LowerPart rangkabawah;
-LowerPartMid rangkabawahtengah;
 Kinematics calc;
-Imu_handler imu
-
-// Motor roda1(sel_fr, pwm_fr); // roda 3
-// Motor roda2(sel_fl, pwm_fl); // roda 4
-// Motor roda3(sel_bl, pwm_bl); // roda 1
-// Motor roda4(sel_br, pwm_br); // roda 2
-// Motor roda5(rpwm_mid, lpwm_mid); // roda tengah
+Imu_handler imu;
 
 /* --- DC MOTOR for movement  PIN --- */
 //-- kanan depan (1) udah
@@ -63,7 +56,7 @@ Imu_handler imu
 #define LED PC13
 
 /* --- QUADRATURE ENCODER MOTOR --- */
-const float PPR = 537.6; //PPR Encoder
+const float PPR = 537.6; //PPR Encoder 
 Encoder_internal_state_t * Encoder::interruptArgs[];
 Encoder ENCFR(encA_fr, encB_fr, PPR);
 Encoder ENCFL(encA_fl, encB_fl, PPR);

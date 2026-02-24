@@ -19,19 +19,19 @@ LowerPart::LowerPart(byte sel_1, byte pwm_1,
 
 void LowerPart::Movement(float V1, float V2, float V3, float V4) {
 
-  if (V1 > 0)       roda_1.ccw(static_cast<uint16_t>(fabsf(V1)));
-  else if (V1 < 0)  roda_1.cw (static_cast<uint16_t>(fabsf(V1)));
-  else              roda_1.stop();
+  if (V1 > 0)       roda_1.CCW(static_cast<uint16_t>(fabsf(V1)));
+  else if (V1 < 0)  roda_1.CW (static_cast<uint16_t>(fabsf(V1)));
+  else              roda_1.STOP();
 
-  if (V2 > 0)       roda_2.ccw(static_cast<uint16_t>(fabsf(V2)));
-  else if (V2 < 0)  roda_2.cw (static_cast<uint16_t>(fabsf(V2)));
-  else              roda_2.stop();
+  if (V2 > 0)       roda_2.CCW(static_cast<uint16_t>(fabsf(V2)));
+  else if (V2 < 0)  roda_2.CW (static_cast<uint16_t>(fabsf(V2)));
+  else              roda_2.STOP();
 
-  if (V3 > 0)       roda_3.ccw(static_cast<uint16_t>(fabsf(V3)));
-  else if (V3 < 0)  roda_3.cw (static_cast<uint16_t>(fabsf(V3)));
-  else              roda_3.stop();
+  if (V3 > 0)       roda_3.CCW(static_cast<uint16_t>(fabsf(V3)));
+  else if (V3 < 0)  roda_3.CW (static_cast<uint16_t>(fabsf(V3)));
+  else              roda_3.STOP();
 
-  if (V4 > 0)       roda_4.ccw(static_cast<uint16_t>(fabsf(V4)));
-  else if (V4 < 0)  roda_4.cw (static_cast<uint16_t>(fabsf(V4)));
-  else              roda_4.stop();
+  if (V4 > 0)       roda_4.CCW(static_cast<uint16_t>(fabsf(V4)));
+  else if (V4 < 0)  roda_4.CW (static_cast<uint16_t>(fabsf(V4)));
+  else              roda_4.STOP();
 }

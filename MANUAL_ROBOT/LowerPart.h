@@ -6,21 +6,20 @@
 
 class LowerPart {
   private:
-    Motor motor1;
-    Motor motor2;
-    Motor motor3;
-    Motor motor4;
+    Motor roda_1;
+    Motor roda_2;
+    Motor roda_3;
+    Motor roda_4;
     
-  public :
-    LowerPart();
-    LowerPart(
-      int pwm1, int sel1,
-      int pwm2, int sel2,
-      int pwm3, int sel3,
-      int pwm4, int sel4
-    );
+  public:
+    LowerPart();   // dummy (pin 0,0)
+    LowerPart(byte sel_1, byte pwm_1,
+              byte sel_2, byte pwm_2,
+              byte sel_3, byte pwm_3,
+              byte sel_4, byte pwm_4); // lengkap
 
-    void moveRobot(float v_w1, float v_w2, float v_w3, float v_w4);
+
+    void Movement(float V1, float V2, float V3, float V4);
 };
 
 #endif

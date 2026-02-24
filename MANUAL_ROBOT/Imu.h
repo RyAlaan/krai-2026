@@ -2,7 +2,6 @@
 #define IMU_H
 
 #include <Arduino.h>
-#include "I2Cdev.h"
 #include "MPU6050.h"
 #include "Wire.h"
 
