@@ -2,59 +2,27 @@
 #include "Variable.h"
 
 /* Untuk manual */
-void MoveRobot() {
-  /*------------------------ 1. Atur Kecepatan ------------------------------*/
-  // Fitur kecepatan Turbo / Normal
-  if(rxStruct.cmd == 'i'){ 
-    target_linear_speed = 5000;
-    target_angular_speed = 3000;
-  } else {
-    target_linear_speed = 4000; // Kecepatan linear default
-    target_angular_speed = 2000; // Kecepatan rotasi default
-  }
-
-  // Mengubah data analog DS4 (-1.0 s/d 1.0) menjadi nilai kecepatan RPM
-  Vx = -rxStruct.Vx * target_linear_speed;
-  Vy = -rxStruct.Vy * target_linear_speed; // Negatif agar maju/mundur sesuai arah DS4
+void MoveRobot(){
+  /* Skala input direksional dari keyboard dengan target speed */
+  /* target_linear_speed (misal 1800) akan menjadi nilai duty PWM Anda */
+  Vx = rxStruct.Vx * target_linear_speed;
+  Vy = rxStruct.Vy * target_linear_speed;
   Wr = rxStruct.W * target_angular_speed;
 
-  // Menghitung Kinematika
+  // Hitung Inverse Kinematics untuk mendapat kecepatan target tiap roda
   calc.inverse_kinematics(Vx, Vy, Wr);
 
-  /*------------------------ 2. Logika Mirror ------------------------------*/
-  // Misal rxStruct.cmd == 'j' dikirim dari DS4 untuk membalikkan arah robot
-  if(prevL2 != rxStruct.cmd){
-    if(rxStruct.cmd == 'j'){
-      mirror = !mirror;
-    }
-    prevL2 = rxStruct.cmd;
-  }
+  // Kirim output IK langsung ke motor (Open-loop)
+  // Constrain berfungsi agar nilai PWM aman di rentang resolusi STM32 (12-bit / -4095 hingga 4095)
+  rangkabawah.Movement(
+    constrain(calc.Vwheel[0], -4095, 4095),
+    constrain(calc.Vwheel[1], -4095, 4095),
+    constrain(calc.Vwheel[2], -4095, 4095),
+    constrain(calc.Vwheel[3], -4095, 4095)
+  );
 
-  /*------------------------ 3. Eksekusi Pergerakan Roda -------------------*/
-  if (mirror) { 
-    // Mode Mirror (Arah dibalik)
-    rangkabawah.Movement(
-      constrain(calc.Vwheel[2], -3000, 3000), 
-      constrain(calc.Vwheel[3], -3000, 3000), 
-      constrain(calc.Vwheel[0], -3000, 3000), 
-      constrain(calc.Vwheel[1], -3000, 3000)
-    );
-  } else { 
-    // Mode Normal
-    rangkabawah.Movement(
-      constrain(calc.Vwheel[0], -3000, 3000), 
-      constrain(calc.Vwheel[1], -3000, 3000), 
-      constrain(calc.Vwheel[2], -3000, 3000), 
-      constrain(calc.Vwheel[3], -3000, 3000)
-    );
-  }
-
-  /*------------------------ 4. Kontrol Roller ------------------------------*/
-  if (roller) {
-    rangkabawahtengah.RollerMovement(Vy); // Roller berputar sesuai Vy
-  } else {
-    rangkabawahtengah.RollerMovement(0);
-  }
+  // Biarkan forward kinematics jika ingin mencetak nilai X, Y, Tetha untuk debugging
+  calc.forward_kinematics(ENCFR.read(), ENCFL.read(), ENCBL.read(), ENCBR.read(), true);
 }
 
 /* Untuk Otonom */

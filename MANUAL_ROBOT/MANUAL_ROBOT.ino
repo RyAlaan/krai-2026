@@ -1,162 +1,130 @@
 #include "Variable.h"
 
-Motor roda1(sel_fr, pwm_fr);
-Motor roda2(sel_fl, pwm_fl);
-Motor roda3(sel_bl, pwm_bl);
-Motor roda4(sel_br, pwm_br);
+Motor roda1(sel_fr, pwm_fr); // roda 4
+Motor roda2(sel_fl, pwm_fl); // roda 2
+Motor roda3(sel_bl, pwm_bl); // roda 1
+Motor roda4(sel_br, pwm_br); // roda 3
 
+float norm_(float yaw){
+  return fmod((yaw + 180), 360) - 180;
+}
 
-float manual_linear_rpm  = 4000.0;   // translasi
-float manual_angular_rpm = 500.0;   // rotasi
-
-void setup() {
+void setup(){
   Serial.begin(115200);
-  Motor::beginPWM(20000, 12);
-  pinMode(PC13, OUTPUT);
+  Motor::beginPWM(20000, 12);  
+  
+  pinMode(LED, OUTPUT); 
+  digitalWrite(LED, LOW); 
 
-  rangkabawah = LowerPart(sel_fr, pwm_fr,
-                          sel_fl, pwm_fl,
-                          sel_bl, pwm_bl,
-                          sel_br, pwm_br);
+  // OBJECT CONSTRUCTING
+  rangkabawah = LowerPart(sel_fr, pwm_fr, sel_fl, pwm_fl, sel_bl, pwm_bl, sel_br, pwm_br);
 
+  if(!imu.begin()){
+    Serial.println("IMU MPU6050 gagal dideteksi!");
+  } else {
+    Serial.println("IMU Siap & Terkalibrasi.");
+  }
+  
   calc = Kinematics(a1, a2, a3, a4, r, R);
   calc.set_ideal_value(a1_ideal, a2_ideal, a3_ideal, a4_ideal);
   calc.PPR = PPR;
   calc.init();
   calc.update_angle(0);
 
-  motor1.SetMode(QuickPID::Control::automatic);
-  motor2.SetMode(QuickPID::Control::automatic);
-  motor3.SetMode(QuickPID::Control::automatic);
-  motor4.SetMode(QuickPID::Control::automatic);
-
-  motor1.SetOutputLimits(-4095, 4095);
-  motor2.SetOutputLimits(-4095, 4095);
-  motor3.SetOutputLimits(-4095, 4095);
-  motor4.SetOutputLimits(-4095, 4095);
+  PID_init();
+  
+  // myTransfer.begin(Serial); // Terhubung ke Mini PC / Python
 }
 
-void loop() {
+void loop(){
+  // receive();
 
-  /* ===================== KEYBOARD CONTROL ===================== */
-  if (Serial.available()) {
-    char key = Serial.read();
+  inputCommand();
 
+  if(!stop){
+    if (millis() - input_prevmillis >= inputrate){
+      
+      imu.update();
 
-    if (key == 'o') {
-      digitalWrite(PC13, LOW);
+      /* --- BACA ENCODER --- */
+      prev_fr_tics = fr_tics; prev_fl_tics = fl_tics, prev_bl_tics = bl_tics; prev_br_tics = br_tics;
+      fr_tics = ENCFR.read(); fl_tics = ENCFL.read(); bl_tics = ENCBL.read(); br_tics = ENCBR.read(); 
+      prev_Timing = Timing;
+      Timing = micros();
+      
+      Vreal1 = ((fr_tics - prev_fr_tics)/(((float)(Timing - prev_Timing))/1.0e6))/PPR*60.0;
+      Vreal2 = ((fl_tics - prev_fl_tics)/(((float)(Timing - prev_Timing))/1.0e6))/PPR*60.0;
+      Vreal3 = ((bl_tics - prev_bl_tics)/(((float)(Timing - prev_Timing))/1.0e6))/PPR*60.0;
+      Vreal4 = ((br_tics - prev_br_tics)/(((float)(Timing - prev_Timing))/1.0e6))/PPR*60.0;
+      
+      Vfilt1 = Roda_1.updateEstimate(Vreal1);
+      Vfilt2 = Roda_2.updateEstimate(Vreal2);
+      Vfilt3 = Roda_3.updateEstimate(Vreal3);
+      Vfilt4 = Roda_4.updateEstimate(Vreal4);
+
+      calc.update_angle(imu.psi);
+
+      // MoveRobot();
+
+      PID_compute();
+
+      txStruct.X = (float) calc.dist_travel[0];
+      txStruct.Y = (float) calc.dist_travel[1];
+      // txStruct.tetha = norm_((float) calc.dist_travel[2]);
+      txStruct.tetha = imu.psi;
+      txStruct.Vx = (float) calc.Vreal[0];
+      txStruct.Vy = (float) calc.Vreal[1];
+      txStruct.Wr = (float) calc.Vreal[2];
+
+      input_prevmillis = millis();
     }
-    if (key == 'n') {
-      digitalWrite(PC13, HIGH);
+  } else {
+    // Jika robot di-stop (ditekan O di DS4)
+    if(reset_data){
+      ENCFR.readAndReset(); ENCFL.readAndReset(); ENCBL.readAndReset(); ENCBR.readAndReset();
+      calc.dist_travel[0] = 0; calc.dist_travel[1] = 0; calc.dist_travel[2] = 0;
+      reset_data = false;
     }
-    if (key == 'w') {
-      Vy = manual_linear_rpm;
-      Vx = 0;
-      Wr = 0;
-    }
-    else if (key == 's') {
-      Vy = -manual_linear_rpm;
-      Vx = 0;
-      Wr = 0;
-    }
-    else if (key == 'd') {
-      Vy = 0;
-      Vx = manual_linear_rpm;
-      Wr = 0;
-    }
-    else if (key == 'a') {
-      Vy = 0;
-      Vx = -manual_linear_rpm;
-      Wr = 0;
-    }
-    else if (key == 'q') {
-      Vx = 0;
-      Vy = 0;
-      Wr = manual_angular_rpm;
-    }
-    else if (key == 'e') {
-      Vx = 0;
-      Vy = 0;
-      Wr = -manual_angular_rpm;
-    }
-    else if (key == 'x') {  
-      Vx = 0;
-      Vy = 0;
-      Wr = 0;
-    }
+    Vx = 0; Vy = 0; Wr = 0;
+    rangkabawah.Movement(0, 0, 0, 0);
   }
 
-  /* ===================== INVERSE KINEMATICS ===================== */
-  calc.inverse_kinematics(Vx, Vy, Wr);
+  /*============================DEBUG SERIAL============================*/
+  // static unsigned long lastPrint = 0;
+  // if (millis() - lastPrint > 100) {
+  //   Serial.print("DS4 Mode | Vy: "); Serial.print(Vy);
+  //   Serial.print("  Vx: "); Serial.print(Vx);
+  //   Serial.print("  Wr: "); Serial.println(Wr);
+  //   lastPrint = millis(); // <--- TITIK KOMA SUDAH DITAMBAHKAN
+  // }
+}
 
-  // rangkabawah.Movement(
-  //   calc.Vwheel[0],
-  //   calc.Vwheel[1],
-  //   calc.Vwheel[2],
-  //   calc.Vwheel[3]
-  // );
+void receive(){
+  if(myTransfer.available()){
+    int16_t recSize = 0;
+    recSize = myTransfer.rxObj(rxStruct, recSize);
 
-  
-  /* ===================== BACA ENCODER ===================== */
-  static long prev_fr = 0, prev_fl = 0, prev_bl = 0, prev_br = 0;
-  static unsigned long prevTime = 0;
+    // On/Off robot
+    if (rxStruct.cmd == 'a') {
+      stop = false;  // on
+    } else if (rxStruct.cmd == 'b') {
+      stop = true;  // off
+    }
+  }  
+} 
 
-  long fr = ENCFR.read();
-  long fl = ENCFL.read();
-  long bl = ENCBL.read();
-  long br = ENCBR.read();
+void transfer(){
+  if(millis() - timePeriode >= 15){
+    int16_t sendSize = 0;
+    struct __attribute__((packed)) STRUCT {
+      float pwm1 = calc.Vwheel[0];
+      float pwm2 = calc.Vwheel[1];
+      float pwm3 = calc.Vwheel[2];
+      float pwm4 = calc.Vwheel[3];
+    }testStruct;
 
-  unsigned long now = micros();
-  float dt = (now - prevTime) / 1e6;
-
-  if (dt > 0.001) {
-
-    Vreal1 = ((fr - prev_fr) / dt) / PPR * 60.0;
-    Vreal2 = ((fl - prev_fl) / dt) / PPR * 60.0;
-    Vreal3 = ((bl - prev_bl) / dt) / PPR * 60.0;
-    Vreal4 = ((br - prev_br) / dt) / PPR * 60.0;
-
-    Vfilt1 = Roda_1.updateEstimate(Vreal1);
-    Vfilt2 = Roda_2.updateEstimate(Vreal2);
-    Vfilt3 = Roda_3.updateEstimate(Vreal3);
-    Vfilt4 = Roda_4.updateEstimate(Vreal4);
-
-    prev_fr = fr;
-    prev_fl = fl;
-    prev_bl = bl;
-    prev_br = br;
-    prevTime = now;
-
-  //   /* ===================== PID ===================== */
-    Setpoint1 = calc.Vwheel[0];
-    Setpoint2 = calc.Vwheel[1];
-    Setpoint3 = calc.Vwheel[2];
-    Setpoint4 = calc.Vwheel[3];
-
-    motor1.Compute();
-    motor2.Compute();
-    motor3.Compute();
-    motor4.Compute();
-
-    rangkabawah.Movement(
-      Output1,
-      Output2,
-      Output3,
-      Output4
-    );
+    sendSize = myTransfer.txObj(testStruct, sendSize);
+    myTransfer.sendData(sendSize);
+    timePeriode = millis();
   }
-
-  /* ===================== DEBUG ===================== */
-  Serial.print("Vy: "); Serial.print(Vy);
-  Serial.print("  Vxx: "); Serial.print(Vx);
-  Serial.print("  Wr: "); Serial.print(Wr);
-  // Serial.print("  | RPM1: "); Serial.print(Vreal1);
-  // Serial.print("  RPM2: "); Serial.print(Vreal2);
-  // Serial.print("  RPM3: "); Serial.print(Vreal3);
-  // Serial.print("  RPM4: "); Serial.println(Vreal4);
-  Serial.print("  | VWheel1: "); Serial.print(calc.Vwheel[1]);
-  Serial.print("  VWheel2: "); Serial.print(calc.Vwheel[2]);
-  Serial.print("  VWheel3: "); Serial.print(calc.Vwheel[3]);
-  Serial.print("  VWheel4: "); Serial.println(calc.Vwheel[4]);
-
 }

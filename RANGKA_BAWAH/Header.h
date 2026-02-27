@@ -12,6 +12,8 @@
 // #include "LowerMid.h"
 
 /* --- TIMINGS --- */
+#define MAXTOK 5
+
 unsigned long input_prevmillis = 0;
 uint8_t inputrate = 7; /*4 ms for 1,25 m/s 
                       10 ms for 0,5 m/s
