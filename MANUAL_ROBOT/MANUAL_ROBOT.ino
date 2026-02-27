@@ -64,7 +64,7 @@ void loop(){
 
       calc.update_angle(imu.psi);
 
-      // MoveRobot();
+      MoveRobot();
 
       PID_compute();
 
