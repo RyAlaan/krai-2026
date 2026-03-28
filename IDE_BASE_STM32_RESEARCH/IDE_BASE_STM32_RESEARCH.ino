@@ -2,24 +2,24 @@
 
 float value1 = 0, value2 = 0, value3 = 0;
 
-Motor roda1(sel_fr, pwm_fr);  // roda 4
-Motor roda2(sel_fl, pwm_fl);  // roda 2
-Motor roda3(sel_bl, pwm_bl);  // roda 1
-Motor roda4(sel_br, pwm_br);  // roda 3
+Motor roda1(sel_fr, pwm_fr); // roda 4
+Motor roda2(sel_fl, pwm_fl); // roda 2
+Motor roda3(sel_bl, pwm_bl); // roda 1
+Motor roda4(sel_br, pwm_br); // roda 3
 // Motor roda5(rpwm_mid, lpwm_mid); // roda tengah
 MotorMid roda5(rpwm_mid, lpwm_mid);
 
-float norm_(float yaw) {
+float norm_(float yaw){
   return fmod((yaw + 180), 360) - 180;
 }
 
-void setup() {
+void setup(){
   Serial.begin(115200);
   Motor::beginPWM(20000, 12);  // satu kali di setup
   // MotorMid::beginPWM(20000, 12);  // satu kali di setup
-  // PID_init();
-  pinMode(LED, OUTPUT);    // Configure built-in LED pin
-  digitalWrite(LED, LOW);  // Ensure LED is off initially
+  PID_init();
+  pinMode(LED, OUTPUT); // Configure built-in LED pin
+  digitalWrite(LED, LOW); // Ensure LED is off initially
   pinMode(rpwm_mid, OUTPUT);
   pinMode(lpwm_mid, OUTPUT);
 
@@ -31,14 +31,11 @@ void setup() {
   calc.PPR = PPR;
   calc.init();
   calc.update_angle(0);
-  // myTransfer.begin(Serial);
+  myTransfer.begin(Serial);
 }
 
-
-
-void loop() {
-  // inputCommand();
-  bacaKeyboard();
+void loop(){
+  inputCommand();
 
   receive();
 
@@ -46,35 +43,32 @@ void loop() {
   // MoveRobot();
   // rangkabawah.RollerMovement(2048); // Test roller movement
 
-  if (prevCommand != rxStruct.cmd) {
-    if (rxStruct.cmd == 'f') {
+  if(prevCommand != rxStruct.cmd){
+    if(rxStruct.cmd == 'f'){
       stop = !stop;
-      digitalWrite(LED, stop ? HIGH : LOW);  // Update LED state based on stop variable
-    } else if (rxStruct.cmd == 'r') {
+      digitalWrite(LED, stop ? HIGH : LOW); // Update LED state based on stop variable
+    }
+    else if(rxStruct.cmd == 'r'){
       reset_data = true;
-    } else if (rxStruct.cmd == 'h') {
-      roller = !roller;  // Toggle roller activation
+    }
+    else if(rxStruct.cmd == 'h'){
+      roller = !roller; // Toggle roller activation
     }
     prevCommand = rxStruct.cmd;
   }
 
-  if (!stop) {
-    if (millis() - input_prevmillis >= inputrate) {
+  if(!stop){
+    if (millis() - input_prevmillis >= inputrate){
       MoveRobot();
-      // PID_compute();
-      prev_fr_tics = fr_tics;
-      prev_fl_tics = fl_tics, prev_bl_tics = bl_tics;
-      prev_br_tics = br_tics;
-      fr_tics = ENCFR.read();
-      fl_tics = ENCFL.read();
-      bl_tics = ENCBL.read();
-      br_tics = ENCBR.read();
+      PID_compute();
+      prev_fr_tics = fr_tics; prev_fl_tics = fl_tics, prev_bl_tics = bl_tics; prev_br_tics = br_tics;
+      fr_tics = ENCFR.read(); fl_tics = ENCFL.read(); bl_tics = ENCBL.read(); br_tics = ENCBR.read(); 
       prev_Timing = Timing;
       Timing = micros();
-      Vreal1 = ((fr_tics - prev_fr_tics) / (((float)(Timing - prev_Timing)) / 1.0e6)) / PPR * 60.0;
-      Vreal2 = ((fl_tics - prev_fl_tics) / (((float)(Timing - prev_Timing)) / 1.0e6)) / PPR * 60.0;
-      Vreal3 = ((bl_tics - prev_bl_tics) / (((float)(Timing - prev_Timing)) / 1.0e6)) / PPR * 60.0;
-      Vreal4 = ((br_tics - prev_br_tics) / (((float)(Timing - prev_Timing)) / 1.0e6)) / PPR * 60.0;
+      Vreal1 = ((fr_tics - prev_fr_tics)/(((float)(Timing - prev_Timing))/1.0e6))/PPR*60.0;
+      Vreal2 = ((fl_tics - prev_fl_tics)/(((float)(Timing - prev_Timing))/1.0e6))/PPR*60.0;
+      Vreal3 = ((bl_tics - prev_bl_tics)/(((float)(Timing - prev_Timing))/1.0e6))/PPR*60.0;
+      Vreal4 = ((br_tics - prev_br_tics)/(((float)(Timing - prev_Timing))/1.0e6))/PPR*60.0;
       Vfilt1 = Roda_1.updateEstimate(Vreal1);
       Vfilt2 = Roda_2.updateEstimate(Vreal2);
       Vfilt3 = Roda_3.updateEstimate(Vreal3);
@@ -163,23 +157,23 @@ void loop() {
       //   Serial.println("");
       // }
 
-      txStruct.X = (float)calc.dist_travel[0];
-      txStruct.Y = (float)calc.dist_travel[1];
-      txStruct.tetha = norm_((float)calc.dist_travel[2]);
-      txStruct.Vx = (float)calc.Vreal[0];
-      txStruct.Vy = (float)calc.Vreal[1];
-      txStruct.Wr = (float)calc.Vreal[2];
+      txStruct.X = (float) calc.dist_travel[0];
+      txStruct.Y = (float) calc.dist_travel[1];
+      txStruct.tetha = norm_((float) calc.dist_travel[2]);
+      txStruct.Vx = (float) calc.Vreal[0];
+      txStruct.Vy = (float) calc.Vreal[1];
+      txStruct.Wr = (float) calc.Vreal[2];
       // Serial.println(txStruct.Vx);
       // Serial.print("Vreal1: "); Serial.print(Vreal1); Serial.print(" Vfilt1: "); Serial.println(Vfilt1);
 
-      // uint16_t sendSize = 0;
-      // sendSize = myTransfer.txObj(txStruct, sendSize);
-      // myTransfer.sendData(sendSize);
+      uint16_t sendSize = 0;
+      sendSize = myTransfer.txObj(txStruct, sendSize);
+      myTransfer.sendData(sendSize);
 
       input_prevmillis = millis();
     }
-  } else {
-    if (reset_data) {
+  } else{
+    if(reset_data){
       ENCFR.readAndReset();
       ENCFL.readAndReset();
       ENCBL.readAndReset();
@@ -195,7 +189,7 @@ void loop() {
     rxStruct.W = 0;
     rangkabawah.Movement(0, 0, 0, 0);
   }
-
+  
   /*=============================MAIN PROGRAM=============================*/
 
   /*============================DEBUG ENCODER============================*/
@@ -220,49 +214,22 @@ void loop() {
   /*============================DEBUG ENCODER============================*/
 }
 
-
-// Tambahkan fungsi ini di bagian bawah untuk membaca input tombol W,A,S,D
-void bacaKeyboard() {
-  if (Serial.available() > 0) {
-    char cmd = Serial.read();
-
-    // Reset nilai tiap ada input baru
-    rxStruct.Vx = 0;
-    rxStruct.Vy = 0;
-    rxStruct.W = 0;
-    stop = false;
-
-    // Mapping tombol keyboard ke arah vektor gerak
-    switch (cmd) {
-      case 'w': rxStruct.Vy = 1.0; break;   // Maju
-      case 's': rxStruct.Vy = -1.0; break;  // Mundur
-      case 'a': rxStruct.Vx = -1.0; break;  // Kiri
-      case 'd': rxStruct.Vx = 1.0; break;   // Kanan
-      case 'q': rxStruct.W = 1.0; break;    // Putar CCW
-      case 'e': rxStruct.W = -1.0; break;   // Putar CW
-      case ' ': stop = true; break;         // Spasi untuk stop
-    }
-  }
-}
-
-
-
-void receive() {
-  if (myTransfer.available()) {
+void receive(){
+  if(myTransfer.available()){
     int16_t recSize = 0;
     recSize = myTransfer.rxObj(rxStruct, recSize);
-  }
+  }  
 }
 
-void transfer() {
-  if (millis() - timePeriode >= 15) {
+void transfer(){
+  if(millis() - timePeriode >= 15){
     int16_t sendSize = 0;
     struct __attribute__((packed)) STRUCT {
-      float pwm1 = calc.Vwheel[0];  //control.LX;//kinec.Vw[0];
-      float pwm2 = calc.Vwheel[1];  //control.LY;//kinec.Vw[1];
-      float pwm3 = calc.Vwheel[2];  //control.RX;//kinec.Vw[2];
-      float pwm4 = calc.Vwheel[3];  //control.RY;//kinec.Vw[3];
-    } testStruct;
+      float pwm1 = calc.Vwheel[0];//control.LX;//kinec.Vw[0];
+      float pwm2 = calc.Vwheel[1];//control.LY;//kinec.Vw[1];
+      float pwm3 = calc.Vwheel[2];//control.RX;//kinec.Vw[2];
+      float pwm4 = calc.Vwheel[3];//control.RY;//kinec.Vw[3];
+    }testStruct;
 
     sendSize = myTransfer.txObj(testStruct, sendSize);
 
@@ -306,7 +273,7 @@ void transfer() {
 //         }
 //         else if (c == 'W') {
 //           stop = 1;
-
+        
 //         }
 //         else {
 //           Serial.println(F("Input salah. Ketik 3 angka atau Q/W."));

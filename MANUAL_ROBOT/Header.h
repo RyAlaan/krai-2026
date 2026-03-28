@@ -8,7 +8,7 @@
 #include "LowerPart.h"
 #include "Kinematics.h"
 #include "SerialTransfer.h"
-#include "Imu.h"
+// #include "Imu.h"
 #include "PID.ino"
 // #include "MotorMid.h"
 
@@ -27,7 +27,7 @@ uint8_t inputrate = 7; /*4 ms for 1,25 m/s
 /* --- OBJECT --- */
 LowerPart rangkabawah;
 Kinematics calc;
-IMU_Handler imu;
+// IMU_Handler imu;
 
 /* --- DC MOTOR for movement  PIN --- */
 //-- kanan depan (1) udah

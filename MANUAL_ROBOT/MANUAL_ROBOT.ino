@@ -4,6 +4,7 @@ Motor roda1(sel_fr, pwm_fr); // roda 4
 Motor roda2(sel_fl, pwm_fl); // roda 2
 Motor roda3(sel_bl, pwm_bl); // roda 1
 Motor roda4(sel_br, pwm_br); // roda 3
+MotorMid roda5(rpwm_mid, lpwm_mid); // roda tank
 
 float norm_(float yaw){
   return fmod((yaw + 180), 360) - 180;
@@ -19,11 +20,11 @@ void setup(){
   // OBJECT CONSTRUCTING
   rangkabawah = LowerPart(sel_fr, pwm_fr, sel_fl, pwm_fl, sel_bl, pwm_bl, sel_br, pwm_br);
 
-  if(!imu.begin()){
-    Serial.println("IMU MPU6050 gagal dideteksi!");
-  } else {
-    Serial.println("IMU Siap & Terkalibrasi.");
-  }
+  // if(!imu.begin()){
+  //   Serial.println("IMU MPU6050 gagal dideteksi!");
+  // } else {
+  //   Serial.println("IMU Siap & Terkalibrasi.");
+  // }
   
   calc = Kinematics(a1, a2, a3, a4, r, R);
   calc.set_ideal_value(a1_ideal, a2_ideal, a3_ideal, a4_ideal);
@@ -33,18 +34,18 @@ void setup(){
 
   PID_init();
   
-  // myTransfer.begin(Serial); // Terhubung ke Mini PC / Python
+  myTransfer.begin(Serial); // Terhubung ke Mini PC / Python
 }
 
 void loop(){
-  // receive();
+  receive();
 
   inputCommand();
 
   if(!stop){
     if (millis() - input_prevmillis >= inputrate){
       
-      imu.update();
+      // imu.update();
 
       /* --- BACA ENCODER --- */
       prev_fr_tics = fr_tics; prev_fl_tics = fl_tics, prev_bl_tics = bl_tics; prev_br_tics = br_tics;

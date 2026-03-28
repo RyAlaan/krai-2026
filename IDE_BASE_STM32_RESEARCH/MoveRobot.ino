@@ -9,16 +9,15 @@ void MoveRobot(){
   Wr = rxStruct.W * target_angular_speed;
   calc.inverse_kinematics(Vx, Vy, Wr);
 
-  if (rxStruct.cmd == 'c') {
-    digitalWrite(LED, !digitalRead(LED));
-  } else if(rxStruct.cmd == 'i'){
+  if(rxStruct.cmd == 'i'){
     target_linear_speed = 5000;
     target_angular_speed = 3000;
     Kp1 = 0.7, Ki1 = 20, Kd1 = 0;
     Kp2 = 0.7, Ki2 = 20, Kd2 = 0;
     Kp3 = 0.7, Ki3 = 20, Kd3 = 0;
     Kp4 = 0.7, Ki4 = 20, Kd4 = 0;
-  }   else{
+
+  }else{
     target_linear_speed = 1800;
     target_angular_speed = 900; 
     Kp1 = 0.5, Ki1 = 20, Kd1 = 0;

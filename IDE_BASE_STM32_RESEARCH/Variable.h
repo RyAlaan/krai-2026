@@ -98,7 +98,7 @@ char prevCommand = ' ';
 bool stop = true;
 bool mirror = false;
 bool reset_data = false;
-bool PID_on = false;
+bool PID_on = true;
 
 /*-------------------------Debounce------------------------------*/
 char prevStart, prevL2;

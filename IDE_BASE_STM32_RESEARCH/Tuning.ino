@@ -160,6 +160,7 @@
 //         // float Vx = 2000; // Konversi cm/s ke m/s
 //         float Vy = rxStruct.Vy; // Konversi cm/s ke m/s
 //         float W = rxStruct.W; // rad/s
+
 //         calc.inverse_kinematics(Vx, Vy, W);
 //         Serial.print("Setpoint Vx: "); Serial.print(rxStruct.Vx); Serial.print(" cm/s");
 //         Serial.print(" Vy: "); Serial.print(rxStruct.Vy); Serial.print(" cm/s");
